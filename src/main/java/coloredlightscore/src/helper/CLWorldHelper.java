@@ -176,6 +176,10 @@ public class CLWorldHelper {
                 int idx_y;
                 int idx_z;
 
+                int offset_x;
+                int offset_y;
+                int offset_z;
+
                 int max = (int) compLightValue & 0xF;
                 int offset = 15 - max;
 
@@ -185,29 +189,55 @@ public class CLWorldHelper {
                             idx_x = x + offset;
                             idx_y = y + offset;
                             idx_z = z + offset;
+
+                            offset_x = par_x + idx_x - 15;
+                            offset_y = par_y + idx_y - 15;
+                            offset_z = par_x + idx_z - 15;
+
                             int idx = idx_x * 31 * 31 + idx_y * 31 + idx_z;
 
-                            Block block = world.getBlock(par_x + idx_x, par_y + idx_y, par_z + idx_z);
+                            Block block = world.getBlock(offset_x,offset_y, offset_z);
                             if (block == Blocks.air || block == null) continue;
 
-                            int brightness = block.getLightValue(world, par_x + idx_x, par_y + idx_y, par_z + idx_z);
-                            int opacity = block.getLightOpacity(world, par_x + idx_x, par_y + idx_y, par_z + idx_z);
+                            int brightness = block.getLightValue(world, offset_x,offset_y, offset_z);
+                            int opacity = block.getLightOpacity(world, offset_x,offset_y, offset_z);
                             if (opacity < 1) {
                                 opacity = 1;
                             }
 
                             world.lightAdditionBlockList[idx] = opacity << 32 | brightness;
-
-                            while (max > 0) {
-                                CLWorldHelper.iterateSpread(world, max, offset);
-                                max--;
-                                offset++;
-                            }
                         }
                     }
                 }
                 //:P - Heavily Inspired by: Player, creator of  (Thank you so much for the idea)
+
+                while (max > 0) {
+                    CLWorldHelper.iterateSpread(world, max, offset);
+                    max--;
+                    offset++;
+                }
+
+                max = (int) compLightValue & 0xF;
+                offset = 15 - max;
+
+                for (int x = 0; x < (max * 2) + 1; x++) {
+                    for (int y = 0; y < (max * 2) + 1; y++) {
+                        for (int z = 0; z < (max * 2) + 1; z++) {
+                            idx_x = x + offset;
+                            idx_y = y + offset;
+                            idx_z = z + offset;
+
+                            offset_x = par_x + idx_x - 15;
+                            offset_y = par_y + idx_y - 15;
+                            offset_z = par_x + idx_z - 15;
+
+                            world.setLightValue(par1Enu, offset_x,offset_y, offset_z, (int)(world.lightAdditionBlockList[idx_x * 31 * 31 + idx_y * 31 + idx_z] & 0xFFFF));
+                        }
+                    }
+                }
             }
+
+
 
             world.theProfiler.endStartSection("lightSubtraction");
 
